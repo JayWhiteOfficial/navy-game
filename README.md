@@ -6,6 +6,7 @@ This project aims to create a windows-based game in which our hero shoot enemies
   2. generate NPCs with random moving directions
   3. print current state of game in the upper right region
   4. add "flash" to flash across the walls which cannot be crossed in normal cases  
+  5. background music
 ## playing guide
 press 'J' to shoot  
 press 'K' to change weapon  
