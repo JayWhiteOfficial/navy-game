@@ -3,6 +3,7 @@
 #include"map.h"
 #include"string"
 #define MAX_WEAPON  2
+#define MAX_MAP 2
 using namespace std;
 class LazerGun;
 class Spirit
@@ -17,7 +18,7 @@ public:
     }
     void SleepTime();//两帧之间停顿一下
     void ChangeSpeed(int speed);
-    bool IfFood(int x, int y);//是否吃到了食物？
+    bool IfFood(int x, int y);
     bool MoveControlled(char, map);//键盘响应下的下一步移动方向
     virtual bool IfCrash(map Map) = 0;//是否撞了？
     virtual bool MoveNotControlled(map) = 0;//无键盘响应下的下一步位置
@@ -134,16 +135,21 @@ public:
     }
     int GetX() { return x; }
     int GetY() { return y; }
+    int SetX(int set_x) { x = set_x; }
+    int SetY(int set_y) { x = set_y; }
+    int GetMap() { return Current_map; }
     int GetWeapon() { return Current_weapon; }
     void Paint(map);
     bool IfCrash(map Map);
     bool MoveNotControlled(map Map);
     bool Flash(map Map);
     void ChangeWeapon() { Current_weapon = (Current_weapon + 1) % MAX_WEAPON; }
+    void ChangeMap() { Current_map = (Current_map + 1) % MAX_MAP; }
 private:
     string Name;
     int Money;
     int Current_weapon;
+    int Current_map = 0;
 };
 
 /*—————————————————成员实现———————————————————————*/
@@ -201,7 +207,7 @@ bool NPC::MoveNotControlled(map Map)
         x = x;
         y = y + 1;
     }
-    if (IfCrash(Map))	//撞到自己或者撞墙直接Gameover
+    if (IfCrash(Map))	
     {
         SetDirection(Direction == 'a' ? 'd' : (Direction == 'w' ? 's' : (Direction == 'd' ? 'a' : 'w')));
         //     return false;

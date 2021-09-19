@@ -183,11 +183,11 @@ bool Interface::StartGame()
 {
     system("cls");
     srand(time(0));
-    map main_map;
+    map main_map, second_floor;
     Havy Q;
     Pistol pistol;
     LazerGun lazergun;
-    gun* weapon[2];
+    gun* weapon[MAX_WEAPON];
     weapon[0] = &pistol;
     weapon[1] = &lazergun;
     pistol_bullet Bullet;
@@ -199,10 +199,16 @@ bool Interface::StartGame()
     Monsters.push_back(npc1);
     Monsters.push_back(npc2);
     main_map.GetMap("map2.txt");
+    second_floor.GetMap("map_second_floor.txt");
     main_map.PaintMap();
+    map Maps[MAX_MAP];
+    Maps[0] = main_map;
+    Maps[1] = second_floor;
     Q.Init();
     Q.Paint(main_map);
     bool Pause = false;
+    bool Come_into_Channel = false;
+    int last_location = 0;
     mciSendString(L"open background_music.mp3 alias back", NULL, 0, NULL);
     mciSendString(L"open lazer.mp3 alias lazer", NULL, 0, NULL);
     mciSendString(L"open pistol_bullet.mp3 alias pistol_bullet", NULL, 0, NULL);
@@ -218,7 +224,7 @@ bool Interface::StartGame()
             if (key == 'a' || key == 'w' || key == 's' || key == 'd')
             {
                 current_direction = key;
-                Q.MoveControlled(key, main_map);
+                Q.MoveControlled(key, Maps[Q.GetMap()]);
             }
             if (key == 'j' || lazer.Isflying())
             {
@@ -254,26 +260,26 @@ bool Interface::StartGame()
             }
             if (key == ' ')
             {
-                Q.Flash(main_map);
+                Q.Flash(Maps[Q.GetMap()]);
             }
             list<bullet*>::iterator it;
             list<NPC*>::iterator itr;
             NumOfNPC = 0;
             for (itr = Monsters.begin();itr != Monsters.end();)
             {
-                (*itr)->MoveNotControlled(main_map);
+                (*itr)->MoveNotControlled(Maps[Q.GetMap()]);
                 for (it = Bullets.begin();it != Bullets.end();it++)
                 {
                     if (((*it))->IfKill((*itr)))
                     {
                         (*itr)->live = false;
-                        (*itr)->dead(main_map);
+                        (*itr)->dead(Maps[Q.GetMap()]);
                         int randx;int randy;
                         while (1)
                         {
                             randx = rand() % 30 + 1;
                             randy = rand() % 60 + 1;
-                            if (main_map.GetMap(randx, randy) != '#' && (randx - Q.GetX()) * (randx - Q.GetY()) > 4)
+                            if (Maps[Q.GetMap()].GetMap(randx, randy) != '#' && (randx - Q.GetX()) * (randx - Q.GetY()) > 4)
                                 break;
                         }
                         NPC* npc = new NPC(randx, randy, rand() % 2 == 1 ? 'w' : 'a');
@@ -293,8 +299,8 @@ bool Interface::StartGame()
             }
             for (it = Bullets.begin();it != Bullets.end();)
             {
-                (*it)->MoveNotControlled(main_map);
-                if ((*it)->IfCrash(main_map))
+                (*it)->MoveNotControlled(Maps[Q.GetMap()]);
+                if ((*it)->IfCrash(Maps[Q.GetMap()]))
                 {
                     delete* it;
                     it = Bullets.erase(it);
@@ -304,13 +310,18 @@ bool Interface::StartGame()
                     it++;
                 }
             }
-            weapon[Q.GetWeapon()]->print(Q, main_map);
+            weapon[Q.GetWeapon()]->print(Q, Maps[Q.GetMap()]);
             Q.PaintMessage(weapon[Q.GetWeapon()]->GetBulletNum(), NumOfNPC);
-            key = 0;
+            key = 0;         
+            if (Q.GetX() == 2 && Q.GetY() == 2 && last_location != 4)//上下楼
+            {
+                Q.ChangeMap();
+                Maps[Q.GetMap()].PaintMap();
+            }
+            last_location = Q.GetX() + Q.GetY();
             Sleep(sleeptime);
         } while (!_kbhit());
-
-
+        
         if (Pause)//死亡即退出主循环
             break;
     }
