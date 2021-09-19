@@ -358,23 +358,23 @@ bool Lazer::MoveNotControlled(map Map)
     int y1 = y;
     if (MoveDirection == 1)
     {
-        x = x - 3;
+        x = x - 1;
         y = y;
     }
     else if (MoveDirection == 2)
     {
-        x = x + 3;
+        x = x + 1;
         y = y;
     }
     else if (MoveDirection == 3)
     {
         x = x;
-        y = y - 3;
+        y = y - 1;
     }
     else if (MoveDirection == 4)
     {
         x = x;
-        y = y + 3;
+        y = y + 1;
     }
     if (IfCrash(Map))
     {
