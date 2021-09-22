@@ -1,4 +1,4 @@
-# navy-game
+# Charactor shooting
 This project aims to create a windows-based game in which our hero shoot enemies with guns  
 *Created by ZCH in 2020*  
 ## goals accomplished:  
