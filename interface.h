@@ -23,7 +23,7 @@
 #define COL 60
 #define ESC 0x1b
 #pragma comment (lib,"Winmm.lib")
-const int sleeptime = 70;
+
 using namespace std;
 int BulletNum;
 int NumOfNPC = 0;
@@ -187,11 +187,14 @@ bool Interface::StartGame()
     Havy Q;
     Pistol pistol;
     LazerGun lazergun;
+    Knife knife;
     gun* weapon[MAX_WEAPON];
     weapon[0] = &pistol;
     weapon[1] = &lazergun;
+    weapon[2] = &knife;
     pistol_bullet Bullet;
     Lazer lazer;
+    Knife_rotation knife_rotation;
     std::list<bullet*> Bullets;
     std::list<NPC*> Monsters;
     NPC* npc1 = new NPC(2, 2, 'a');
@@ -209,18 +212,24 @@ bool Interface::StartGame()
     bool Pause = false;
     bool Come_into_Channel = false;
     int last_location = 0;
+    clock_t start, end;
+    int FPS = 0;
     mciSendString(L"open background_music.mp3 alias back", NULL, 0, NULL);
     mciSendString(L"open lazer.mp3 alias lazer", NULL, 0, NULL);
     mciSendString(L"open pistol_bullet.mp3 alias pistol_bullet", NULL, 0, NULL);
+    mciSendString(L"open knife_rotation.mp3 alias knife_rotation", NULL, 0, NULL);
     mciSendString(L"open change_weapon.mp3 alias change_weapon", NULL, 0, NULL);
     mciSendString(L"open killed.mp3 alias killed", NULL, 0, NULL);
+    mciSendString(L"open flash.mp3 alias flash", NULL, 0, NULL);
     mciSendString(L"play back repeat", NULL, 0, NULL);
     while (1)
     {
+
         char key = 0;
         key = _getch();
         do
         {
+            start = clock();
             if (key == 'a' || key == 'w' || key == 's' || key == 'd')
             {
                 current_direction = key;
@@ -240,7 +249,7 @@ bool Interface::StartGame()
                         lazer->SetDirection(current_direction);
                         Bullets.push_back(lazer);
                     }
-                    else
+                    else if(Q.GetWeapon() == 0)
                     {
                         pistol_bullet* pisbul = new pistol_bullet();
                         mciSendString(L"play pistol_bullet FROM 0 to 1000", NULL, 0, NULL);
@@ -249,7 +258,16 @@ bool Interface::StartGame()
                         pisbul->SetDirection(current_direction);
                         Bullets.push_back(pisbul);
                     }
-
+                    else if (Q.GetWeapon() == 2)
+                    {
+                        Knife_rotation* Kni_ro = new Knife_rotation();
+                        mciSendString(L"seek knife_rotation to start", NULL, 0, NULL);
+                        mciSendString(L"play knife_rotation", NULL, 0, NULL);
+                        Kni_ro->Init(weapon[Q.GetWeapon()]);
+                        Kni_ro->ChangeFlying(true);
+                        Kni_ro->SetDirection(current_direction);
+                        Bullets.push_back(Kni_ro);
+                    }
                 }
             }
             if (key == 'k')
@@ -260,6 +278,8 @@ bool Interface::StartGame()
             }
             if (key == ' ')
             {
+                mciSendString(L"seek flash to start", NULL, 0, NULL);
+                mciSendString(L"play flash", NULL, 0, NULL);
                 Q.Flash(Maps[Q.GetMap()]);
             }
             list<bullet*>::iterator it;
@@ -311,7 +331,6 @@ bool Interface::StartGame()
                 }
             }
             weapon[Q.GetWeapon()]->print(Q, Maps[Q.GetMap()]);
-            Q.PaintMessage(weapon[Q.GetWeapon()]->GetBulletNum(), NumOfNPC);
             key = 0;         
             if (Q.GetX() == 2 && Q.GetY() == 2 && last_location != 4)//上下楼
             {
@@ -319,7 +338,10 @@ bool Interface::StartGame()
                 Maps[Q.GetMap()].PaintMap();
             }
             last_location = Q.GetX() + Q.GetY();
-            Sleep(sleeptime);
+            Sleep(SLEEP_TIME);
+            end = clock();
+            FPS = (int)(1000.0/(1.0 * end - 1.0 * start));
+            Q.PaintMessage(weapon[Q.GetWeapon()]->GetBulletNum(), NumOfNPC, FPS);
         } while (!_kbhit());
         
         if (Pause)//死亡即退出主循环
