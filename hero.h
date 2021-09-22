@@ -2,8 +2,10 @@
 //#include"weapon.h"
 #include"map.h"
 #include"string"
-#define MAX_WEAPON  2
+#define MAX_WEAPON  3
 #define MAX_MAP 2
+#define SLEEP_TIME 70
+//extern const int sleeptime = 70;
 using namespace std;
 class LazerGun;
 class Spirit
@@ -84,6 +86,8 @@ public:
     friend class Scattershot;
     friend class Lazer;
     friend class pistol_bullet;
+    friend class Knife_rotation;
+    friend class Knife;
     NPC(int x0, int y0, char direction, char Style = '%')
     {
         Direction = direction;
@@ -115,10 +119,13 @@ public:
     friend class Lazer;
     friend class ShotGun;
     friend class Scattershot;
+    friend class Knife_rotation;
+    friend class Knife;
     Havy(string name = "Havy", int money = 0) { Name = name;Money = money; Current_weapon = 0; }
-    void PaintMessage(int BulletNum, int NumOfNPC)
+    void PaintMessage(int BulletNum, int NumOfNPC, int FPS)
     {
-        PutSentence((25 - 1) * 2, 2 - 1, Name, WHITE_BLACK);
+        PutSentence((25 - 1) * 2, 2 - 1, "FPS:          ", WHITE_BLACK);
+        PutSentence((28 - 1) * 2, 2 - 1, FPS, RED_BLACK);
         PutSentence((25 - 1) * 2, 3 - 1, "NPC:          ", WHITE_BLACK);
         PutSentence((28 - 1) * 2, 3 - 1, NumOfNPC, RED_BLACK);
         PutSentence((25 - 1) * 2, 4 - 1, "×Óµ¯:            ", WHITE_BLACK);
@@ -127,10 +134,15 @@ public:
         switch (Current_weapon)
         {
         case 0:
-            PutSentence((28 - 1) * 2, 5 - 1, "ÊÖÇ¹", RED_BLACK);
+            PutSentence((28 - 1) * 2, 5 - 1, "¾Ñ»÷Ç¹", RED_BLACK);
             break;
         case 1:
             PutSentence((28 - 1) * 2, 5 - 1, "¼¤¹âÇ¹", RED_BLACK);
+            break;
+        case 2:
+            PutSentence((28 - 1) * 2, 5 - 1, "µ¶     ", RED_BLACK);
+            break;
+
         }
     }
     int GetX() { return x; }

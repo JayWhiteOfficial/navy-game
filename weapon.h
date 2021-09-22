@@ -10,6 +10,7 @@ class gun
 public:
     friend class pistol_bullet;
     friend class Lazer;
+    friend class Knife_rotation;
     virtual void print(Havy npc, map Map) = 0;
     void clear(map Map)
     {
@@ -23,6 +24,7 @@ protected:
     char current;
     int price;
     int BulletNum;
+    int rotation_step;
     int x;
     int y;
 };
@@ -31,13 +33,13 @@ class Pistol: public gun
 public:
     friend class pistol_bullet;
     void print(Havy npc, map Map);
+    char name[20] = "¾Ñ»÷Ç¹";
     Pistol()
     {
         x = 0;y = 0; BulletNum = 50;
     }
 protected:
     char style[4] = { 'A','V','<','>' };
-    char name[20];
     int attack;
 };
 class LazerGun :public gun
@@ -45,13 +47,13 @@ class LazerGun :public gun
 public:
     friend class Lazer;
     void print(Havy, map);
+    char name[20] = "¼¤¹âÇ¹";
     LazerGun()
     {
         x = 0; y = 0; BulletNum = 10000;
     }
 protected:
     char style[2] = { '|','-' };
-    char name[20];
     int attack;
 };
 class ShotGun :public gun
@@ -59,13 +61,27 @@ class ShotGun :public gun
 public:
     friend class Scattershot;
     void print(Havy, map);
+    char name[20] = "É¢µ¯Ç¹";
     ShotGun()
     {
         x = 0; y = 0; BulletNum = 10;
     }
 protected:
     char style[4] = { 'W','M','=','=' };
-    char name[20];
+    int attack;
+};
+class Knife : public gun
+{
+public:
+    friend class pistol_bullet;
+    void print(Havy npc, map Map);
+    char name[20] = "µ¶";
+    Knife()
+    {
+        x = 0; y = 0; BulletNum = 9999;
+    }
+protected:
+    char style[4] = { '|','|','-','-'};
     int attack;
 };
 class bullet :public Spirit
@@ -125,6 +141,19 @@ public:
     void Init(gun*);
     void Paint(map Map);
     bool IfCrash(map) { return (x < 2 || y < 2 || x >29 || y > 59); }
+};
+
+class Knife_rotation :public pistol_bullet
+{
+public:
+    Knife_rotation() { flying = false; }
+    bool MoveNotControlled(map Map);
+    void Init(gun*);
+    void Paint(map Map);
+    bool IfCrash(map) { return Is_rotation_finished == 8; }
+    bool IfKill(NPC*);
+    int rotation_step = 0;
+    int Is_rotation_finished = 0;
 };
 
 
@@ -308,6 +337,116 @@ void ShotGun::print(Havy npc, map Map)
     current = style[npc.MoveDirection - 1];
     if (Map.GetMap(x, y) != '#')
         putchar2raw((y - 1) * 2, x - 1, current, 14);
+}
+
+void Knife::print(Havy npc, map Map)
+{
+    if (x != npc.x || y != npc.y)
+        clear(Map);
+    if (npc.MoveDirection == 1)
+    {
+        x = npc.x - 1;
+        y = npc.y;
+        rotation_step = 6;
+    }
+    else if (npc.MoveDirection == 2)
+    {
+        x = npc.x + 1;
+        y = npc.y;
+        rotation_step = 2;
+    }
+    else if (npc.MoveDirection == 3)
+    {
+        x = npc.x;
+        y = npc.y - 1;
+        rotation_step = 0;
+    }
+    else if (npc.MoveDirection == 4)
+    {
+        x = npc.x;
+        y = npc.y + 1;
+        rotation_step = 4;
+    }
+    current = style[npc.MoveDirection - 1];
+    if (Map.GetMap(x, y) != '#')
+        putchar2raw((y - 1) * 2, x - 1, current, GRAY_BLACK);
+}
+void Knife_rotation::Init(gun* weapon)
+{
+    rotation_step = weapon->rotation_step;
+    this->x = weapon->x;
+    this->y = weapon->y;
+    style = weapon->current;
+    flying = false;
+}
+bool Knife_rotation::MoveNotControlled(map Map)
+{
+    if (Map.GetMap(x, y) != '#')
+        putchar2raw((y - 1) * 2, x - 1, ' ', RED_BLACK);
+    switch (rotation_step)
+    {
+    case 0:
+        this->x = x + 1;
+        this->y = y;
+        style = '/';
+        break;
+    case 1:
+        this->x = x;
+        this->y = y + 1;
+        style = '|';
+        break;
+    case 2:
+        this->x = x;
+        this->y = y + 1;
+        style = '\\';
+        break;
+    case 3:
+        this->x = x - 1;
+        this->y = y;
+        style = '-';
+        break;
+    case 4:
+        this->x = x - 1;
+        this->y = y;
+        style = '/';
+        break;
+    case 5:
+        this->x = x;
+        this->y = y - 1;
+        style = '|';
+        break;
+    case 6:
+        this->x = x;
+        this->y = y - 1;
+        style = '\\';
+        break;
+    case 7:
+        this->x = x + 1;
+        this->y = y;
+        style = '-';
+        break;
+    }
+    rotation_step = (rotation_step + 1) % 8;
+    Is_rotation_finished = Is_rotation_finished + 1;
+    if (Is_rotation_finished == 8)
+        return false;
+    Paint(Map);
+    return true;
+    
+}
+void Knife_rotation::Paint(map Map)
+{
+    if (Map.GetMap(x, y) != '#')
+        putchar2raw((y - 1) * 2, x - 1, this->style, GRAY_BLACK);
+}
+bool Knife_rotation::IfKill(NPC* npc)
+{
+    if (npc->x == x && npc->y == y)
+    {
+        putchar2raw((y - 1) * 2, x - 1, ' ', RED_BLACK);
+        return true;
+    }
+    return false;
 }
 void Lazer::Init(gun* weapon)
 {
